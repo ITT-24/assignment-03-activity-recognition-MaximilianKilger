@@ -42,7 +42,7 @@ class ActivityRecognizer():
         self.train_model(self.train_x, self.train_y)
         print("Model is ready")
         accuracy = self.test_model(self.test_x, self.test_y)
-        print(f"Model has accuracy of {accuracy}") # Ich krieg definitiv keine 3 Punkte...
+        print(f"Model has accuracy of {accuracy}")
 
         # Zu Testzwecken
         #for datasource in np.unique(self.df_raw["source"]):
@@ -122,7 +122,7 @@ class ActivityRecognizer():
         data_freq = pd.DataFrame(np.array(data_freq_list), columns=['acc_x_freq', 'acc_y_freq', 'acc_z_freq', 'gyro_x_freq', 'gyro_y_freq' ,'gyro_z_freq', 'activity'])
         return data_freq
     
-    # finds the maximum value of the acceleration. unused
+    # finds the maximum value of the acceleration. Unused.
     def get_highest_accel_peak(self, raw_data):
         acc_columns = ["acc_x", "acc_y", "acc_z"]
         row = []
@@ -188,7 +188,6 @@ class ActivityRecognizer():
         if with_training_data:
             x = data_freq[['acc_x_freq', 'acc_y_freq', 'acc_z_freq', 'gyro_x_freq', 'gyro_y_freq' ,'gyro_z_freq']]
             y = data_freq['activity']
-            print(x)
             self.scaler = MinMaxScaler()
             data_scaled = self.scaler.fit_transform(x, y)
             return data_scaled, y
@@ -207,6 +206,7 @@ class ActivityRecognizer():
         accuracy = accuracy_score(y, y_predicted)
         return accuracy
     
+    # given dataframe with series 3-axis accelerometer and gyroscope data, categorizes activity.
     def label(self, x):
         x_preprocessed = self.extract_features(x, with_training_data=False)
         if x_preprocessed is None:

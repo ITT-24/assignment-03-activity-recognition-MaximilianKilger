@@ -25,6 +25,8 @@ IMAGE_SCALE = 0.2
 TIMEFRAME_FOR_PREDICTION_SEC = 5
 UPDATE_INTERVAL_SEC = 1
 
+SHOW_PRINTLNS = False
+
 PORT = 5700
 
 window  = pyglet.window.Window(WIN_WIDTH, WIN_HEIGHT)
@@ -118,7 +120,8 @@ class FitnessTrainer():
                 subset = self.sensor_data[-num_samples_required-1:-1] # get the last X seconds of sensor data
                 data = pd.DataFrame(subset, columns=self.columns)
                 self.predicted_activity = self.activity_recognizer.label(data)[0]
-                print(self.predicted_activity)
+                if SHOW_PRINTLNS:
+                    print(self.predicted_activity)
             
             time.sleep(UPDATE_INTERVAL_SEC)
 
