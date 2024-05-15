@@ -44,6 +44,12 @@ class ActivityRecognizer():
         accuracy = self.test_model(self.test_x, self.test_y)
         print(f"Model has accuracy of {accuracy}") # Ich krieg definitiv keine 3 Punkte...
 
+        # Zu Testzwecken
+        #for datasource in np.unique(self.df_raw["source"]):
+        #    data_from_source = self.df_raw[self.df_raw['source'] == datasource]
+        #    data = data_from_source[["acc_x","acc_y","acc_z","gyro_x","gyro_y","gyro_z"]]
+        #    print(f"Label for {datasource}: {self.label(data)}")
+
 
     def load_dataset(self)->pd.DataFrame:
         df_raw = pd.DataFrame(columns=self.COLS_RAW)
@@ -75,7 +81,6 @@ class ActivityRecognizer():
     def to_frequency_domain (self, raw_data:pd.DataFrame)->pd.DataFrame:
         signal_data_columns = ["acc_x","acc_y","acc_z","gyro_x","gyro_y","gyro_z"] # which columns in raw data can be converted to frequency domain
         
-        data_freq_list = []
         row = []
         row_complete = True
         for signal_column in signal_data_columns:
@@ -89,7 +94,7 @@ class ActivityRecognizer():
         if not row_complete:
             return None
         else:
-            data_freq = pd.DataFrame(np.array(data_freq_list), columns=['acc_x_freq', 'acc_y_freq', 'acc_z_freq', 'gyro_x_freq', 'gyro_y_freq' ,'gyro_z_freq'])
+            data_freq = pd.DataFrame(np.array([row]), columns=['acc_x_freq', 'acc_y_freq', 'acc_z_freq', 'gyro_x_freq', 'gyro_y_freq' ,'gyro_z_freq'])
             return data_freq
 
     
@@ -145,6 +150,15 @@ class ActivityRecognizer():
         y_predicted = self.model.predict(x)
         accuracy = accuracy_score(y, y_predicted)
         return accuracy
+    
+    def label(self, x):
+        x_preprocessed = self.extract_features(x, with_training_data=False)
+        if x_preprocessed is None:
+            return None
+        label = self.model.predict(x_preprocessed)
+        return label
+
+
 
 
                 
