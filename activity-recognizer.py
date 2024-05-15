@@ -42,7 +42,7 @@ class ActivityRecognizer():
         self.train_model(self.train_x, self.train_y)
         print("Model is ready")
         accuracy = self.test_model(self.test_x, self.test_y)
-        print(f"Model has accuracy of {accuracy}")
+        print(f"Model has accuracy of {accuracy}") # Ich krieg definitiv keine 3 Punkte...
 
 
     def load_dataset(self)->pd.DataFrame:
