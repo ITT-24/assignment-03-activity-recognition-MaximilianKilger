@@ -78,6 +78,7 @@ class ActivityRecognizer():
 
         return df_raw
     
+    #converts sensor values to FFT and finds the strongest frequency in the signal
     def to_frequency_domain (self, raw_data:pd.DataFrame)->pd.DataFrame:
         signal_data_columns = ["acc_x","acc_y","acc_z","gyro_x","gyro_y","gyro_z"] # which columns in raw data can be converted to frequency domain
         
@@ -121,18 +122,73 @@ class ActivityRecognizer():
         data_freq = pd.DataFrame(np.array(data_freq_list), columns=['acc_x_freq', 'acc_y_freq', 'acc_z_freq', 'gyro_x_freq', 'gyro_y_freq' ,'gyro_z_freq', 'activity'])
         return data_freq
     
+    # finds the maximum value of the acceleration. unused
+    def get_highest_accel_peak(self, raw_data):
+        acc_columns = ["acc_x", "acc_y", "acc_z"]
+        row = []
+        row_complete = True
+        for column in acc_columns:
+            # find maximum frequency of the movement on a given axis. 
+            # there may be better ways of aggregating over time-series data, but I can't think of any at the moment.
+            peak = np.nanmax(np.abs((raw_data[column].values)))
+            if peak != None:
+                row.append(peak)
+            else:
+                row.append(np.nan)
+                row_complete = False
+        if not row_complete:
+            return None
+        else:
+            data_peak = pd.DataFrame(np.array([row]), columns=['acc_x_peak', 'acc_y_peak', 'acc_z_peak', 'activity'])
+            return data_peak
+
+        
+    def get_highest_accel_peak_training_data(self, raw_data):
+        acc_columns = ["acc_x", "acc_y", "acc_z"]
+        data_peak_list = []
+        # process each individually captured series individually
+        for data_source in np.unique(raw_data['source']):
+            batch = raw_data[raw_data['source'] == data_source]
+            row = []
+            row_complete = True
+            for column in acc_columns:
+                # find maximum frequency of the movement on a given axis. 
+                # there may be better ways of aggregating over time-series data, but I can't think of any at the moment.
+                peak = np.nanmax(np.abs(batch[column].values))
+                if peak != None:
+                    row.append(peak)
+                else:
+                    row.append(np.nan)
+                    row_complete = False
+            row.append(batch['activity'].mode()[0])
+            if row_complete:
+                data_peak_list.append(row)
+        data_peak = pd.DataFrame(np.array(data_peak_list), columns=['acc_x_peak', 'acc_y_peak', 'acc_z_peak', 'activity'])
+        return data_peak
+        
+
+    
+
     def extract_features (self, raw_data, with_training_data = False) -> pd.DataFrame:
         data_freq = None
+        #data_peak = None
         if with_training_data:
             data_freq = self.to_frequency_domain_training_data(raw_data)
+            #data_peak = self.get_highest_accel_peak_training_data(raw_data)
         else:
             data_freq = self.to_frequency_domain(raw_data)
-        if data_freq is None:
+            #data_peak = self.get_highest_accel_peak(raw_data)
+        if data_freq is None:# or data_peak is None:
             return None
+        
+        #data_freq['acc_x_peak'] = data_peak['acc_x_peak']
+        #data_freq['acc_y_peak'] = data_peak['acc_y_peak']
+        #data_freq['acc_z_peak'] = data_peak['acc_z_peak']
         
         if with_training_data:
             x = data_freq[['acc_x_freq', 'acc_y_freq', 'acc_z_freq', 'gyro_x_freq', 'gyro_y_freq' ,'gyro_z_freq']]
             y = data_freq['activity']
+            print(x)
             self.scaler = MinMaxScaler()
             data_scaled = self.scaler.fit_transform(x, y)
             return data_scaled, y
