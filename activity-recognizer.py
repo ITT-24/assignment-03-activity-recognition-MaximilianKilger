@@ -6,7 +6,8 @@ from scipy.fft import fft
 from scipy import signal
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
-
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score
 # shamelessly stolen from my 2nd assignment.
 # given a ndarray (float) of samples, finds the most energetic frequency in the fourier transform of the signal
 def find_prevalent_frequency(data:np.ndarray, sampling_rate:int, filter_low:float=None, filter_high:float=None) -> float:
@@ -36,9 +37,12 @@ class ActivityRecognizer():
 
     def __init__(self):
         self.df_raw = self.load_dataset()
-        self.dataset_x, self.dataset_y = self.extract_features(self.df_raw, fit_scaler=True)
-        self.train_x, self.test_x, self.train_y, self.test_y = train_test_split(self.dataset_x, self.dataset_y)
-        
+        self.dataset_x, self.dataset_y = self.extract_features(self.df_raw,with_training_data=True)
+        self.train_x, self.test_x, self.train_y, self.test_y = train_test_split(self.dataset_x, self.dataset_y, test_size=0.75, random_state=2143)
+        self.train_model(self.train_x, self.train_y)
+        print("Model is ready")
+        accuracy = self.test_model(self.test_x, self.test_y)
+        print(f"Model has accuracy of {accuracy}")
 
 
     def load_dataset(self)->pd.DataFrame:
@@ -115,25 +119,33 @@ class ActivityRecognizer():
     def extract_features (self, raw_data, with_training_data = False) -> pd.DataFrame:
         data_freq = None
         if with_training_data:
-            data_freq = self.to_frequency_domain_training_data
+            data_freq = self.to_frequency_domain_training_data(raw_data)
         else:
             data_freq = self.to_frequency_domain(raw_data)
-        if data_freq == None:
+        if data_freq is None:
             return None
         
         if with_training_data:
-            x = data_freq['acc_x_freq', 'acc_y_freq', 'acc_z_freq', 'gyro_x_freq', 'gyro_y_freq' ,'gyro_z_freq']
+            x = data_freq[['acc_x_freq', 'acc_y_freq', 'acc_z_freq', 'gyro_x_freq', 'gyro_y_freq' ,'gyro_z_freq']]
             y = data_freq['activity']
             self.scaler = MinMaxScaler()
             data_scaled = self.scaler.fit_transform(x, y)
             return data_scaled, y
         else:
-            data_scaled = self.scaler.transform(data_freq['acc_x_freq', 'acc_y_freq', 'acc_z_freq', 'gyro_x_freq', 'gyro_y_freq' ,'gyro_z_freq'])
+            data_scaled = self.scaler.transform(data_freq[['acc_x_freq', 'acc_y_freq', 'acc_z_freq', 'gyro_x_freq', 'gyro_y_freq' ,'gyro_z_freq']])
             return data_scaled
+    
+    def train_model (self, x, y):
+        #hyperparameters
+        kernel = 'rbf'
+        self.model = SVC(kernel=kernel)
+        self.model.fit(x, y)
 
+    def test_model (self, x, y):
+        y_predicted = self.model.predict(x)
+        accuracy = accuracy_score(y, y_predicted)
+        return accuracy
 
-
-                    
 
                 
 
