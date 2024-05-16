@@ -134,7 +134,9 @@ def on_press(key):
         print("Saving...")
         global data
         #data = data.drop('index')
-        filepath = os.path.join("data", f"max-{ACTIVITY}-{LOG_NUMBER}.csv")
+
+        # AS: hard coded path?
+        filepath = os.path.join("data", f"andi-{ACTIVITY}-{LOG_NUMBER}.csv")
         data.reset_index(inplace=True)
         data.index.name = 'id'
         data.drop('index', axis=1, inplace=True)
